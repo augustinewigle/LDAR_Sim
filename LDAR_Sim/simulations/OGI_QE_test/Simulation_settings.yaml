@@ -4,3 +4,4 @@ pregenerate_leaks: True
 preseed_random: True
 reference_program: P_OGI
 baseline_program: P_none
+n_simulations: 10
