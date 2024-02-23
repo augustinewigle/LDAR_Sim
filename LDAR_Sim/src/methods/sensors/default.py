@@ -59,10 +59,11 @@ def detect_emissions(
 
     elif self.config["measurement_scale"] == "component":
         # If measurement scale is a leak, all leaks will be tagged
+        # ^ Not true anymore, there can still be measurement error with component scale i.e. OGI
         for leak in covered_leaks:
-            if leak["rate"] > self.config["sensor"]["MDL"][0]:
+            measured_rate = get_measured_rate(leak["rate"], self.config["sensor"]["QE"])
+            if measured_rate > self.config["sensor"]["MDL"][0]:
                 found_leak = True
-                measured_rate = get_measured_rate(leak["rate"], self.config["sensor"]["QE"])
                 is_new_leak = update_tag(
                     leak,
                     measured_rate,
