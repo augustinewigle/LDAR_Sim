@@ -1,0 +1,5 @@
+program_name: P_OGI_QE2
+parameter_level: program
+version: "3.3"
+method_labels:
+  - OGI_QE2
