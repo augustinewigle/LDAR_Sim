@@ -8,6 +8,8 @@ sensor:
   QE: 0.0
   MDL: [0.01]
   mod_loc: "_placeholder_str_"
+  bayes: False # True/False
+  bayes_params: "_location_of_mcmc_params.csv_"
 coverage:
   spatial: 1.0 # 0.0 to 1.0
   temporal: 1.0 # 0.0 to 1.0
