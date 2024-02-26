@@ -20,7 +20,7 @@
 from methods.funcs import measured_rate as get_measured_rate
 #from methods.funcs import measured_rate_bayes as get_bayes_rate
 from utils.attribution import update_tag
-import pandas as pd
+import numpy as np
 
 def detect_emissions(
     self,
@@ -39,8 +39,15 @@ def detect_emissions(
     missed_leaks_str = "{}_missed_leaks".format(self.config["label"])
 
     if self.config["sensor"]["bayes"]:
-        bayes_params = pd.read_csv(self.config["sensor"]["bayes_params"])
-        param_sample = bayes_params.sample()
+        # average of mcmc coefficients inputted as a method param under sensor
+        alpha0 = self.config['sensor']['alpha0']
+        alpha1 = self.config['sensor']['alpha1']
+        alpha2 = self.config['sensor']['alpha2']
+        beta0 = self.config['sensor']['beta0']
+        beta1 = self.config['sensor']['beta1']
+        gamma = self.config['sensor']['gamma']
+        tau = self.config['sensor']['tau']
+        eta = self.config['sensor']['eta']
         if self.config["measurement_scale"] == "site":
             if covered_site_rate > self.config["sensor"]["MDL"][0]:
                 found_leak = True
@@ -50,7 +57,10 @@ def detect_emissions(
                 self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
         elif self.config["measurement_scale"] == "equipment":
             for rate in covered_equipment_rates:
-                m_rate = param_sample['alpha0'].iloc[0] + param_sample['alpha1'].iloc[0]*leak['rate']
+                # sample epsilon from normal distribution
+                error = np.random.normal(0, 1/tau)
+                # compute measured rate according to the mcmc coefficients
+                m_rate = (alpha0 + alpha1*rate) * np.exp(error)
                 if m_rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
                 else:
@@ -65,7 +75,13 @@ def detect_emissions(
             # If measurement scale is a leak, all leaks will be tagged
             # ^ Not true anymore, there can still be measurement error with component scale i.e. OGI
             for leak in covered_leaks:
-                measured_rate = param_sample['alpha0'].iloc[0] + param_sample['alpha1'].iloc[0]*leak['rate'] + param_sample['alpha2'].iloc[0]*leak['rate']**2
+                # sample epsilon from normal distribution
+                error = np.random.normal(0,1/(tau + leak['rate']/eta))
+                # compute measured rate according to mcmc coefficients
+                if leak['rate'] <= gamma:
+                    measured_rate = (alpha0 + alpha1 * leak['rate'] + alpha2 * leak['rate']**2) * np.exp(error)
+                else:
+                    measured_rate = (alpha0 + beta0 + (alpha1 + beta1)*leak['rate']) * np.exp(error)
                 if measured_rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
                     is_new_leak = update_tag(

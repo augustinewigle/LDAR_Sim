@@ -1,5 +1,5 @@
-program_name: P_OGI_QE2
+program_name: P_OGI_bayes
 parameter_level: program
 version: "3.3"
 method_labels:
-  - OGI_QE2
+  - OGI_bayes

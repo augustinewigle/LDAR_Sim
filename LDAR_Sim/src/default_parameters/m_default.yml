@@ -9,7 +9,14 @@ sensor:
   MDL: [0.01]
   mod_loc: "_placeholder_str_"
   bayes: False # True/False
-  bayes_params: "_location_of_mcmc_params.csv_"
+  alpha0: 0.0 # default value for coefficients
+  alpha1: 0.0
+  alpha2: 0.0
+  beta0: 0.0
+  beta1: 0.0
+  gamma: 0.0
+  tau: 1.0
+  eta: 1.0
 coverage:
   spatial: 1.0 # 0.0 to 1.0
   temporal: 1.0 # 0.0 to 1.0
