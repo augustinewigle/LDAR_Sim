@@ -59,7 +59,7 @@ def detect_emissions(
             for rate in covered_equipment_rates:
                 # sample epsilon from normal distribution
                 error = np.random.normal(0, 1/tau)
-                # compute measured rate according to the mcmc coefficients
+                # compute measured rate according to the mcmc coefficients 
                 m_rate = (alpha0 + alpha1*rate) * np.exp(error)
                 if m_rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
