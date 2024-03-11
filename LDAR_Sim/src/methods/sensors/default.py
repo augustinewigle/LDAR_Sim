@@ -57,12 +57,13 @@ def detect_emissions(
                 self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
         elif self.config["measurement_scale"] == "equipment":
             for rate in covered_equipment_rates:
-                # sample epsilon from normal distribution
-                error = np.random.normal(0, 1/tau)
-                # compute measured rate according to the mcmc coefficients 
-                m_rate = (alpha0 + alpha1*rate) * np.exp(error)
-                if m_rate > self.config["sensor"]["MDL"][0]:
+                # Probability of detection is independent of measurement error, use true rate to compare to MDL
+                if rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
+                    # sample epsilon from normal distribution
+                    # compute measured rate according to the mcmc coefficients 
+                    error = np.random.normal(0, 1/tau)
+                    m_rate = (alpha0 + alpha1*rate) * np.exp(error)
                 else:
                     m_rate = 0
                 equip_measured_rates.append(m_rate)
@@ -74,6 +75,7 @@ def detect_emissions(
         elif self.config["measurement_scale"] == "component":
             # If measurement scale is a leak, all leaks will be tagged
             # ^ Not true anymore, there can still be measurement error with component scale i.e. OGI
+            # maybe take in technology type as one of the inputs, chnage likelihood/variance accordingly
             for leak in covered_leaks:
                 # sample epsilon from normal distribution
                 error = np.random.normal(0,1/(tau + leak['rate']/eta))

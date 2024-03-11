@@ -1,0 +1,7 @@
+parameter_level: simulation_settings
+version: "3.3"
+pregenerate_leaks: True
+preseed_random: True
+reference_program: P_aircraft
+baseline_program: P_none
+n_simulations: 3
