@@ -9,6 +9,10 @@ sensor:
   MDL: [0.01]
   mod_loc: "_placeholder_str_"
   bayes: False # True/False
+  prior: "lognorm" # "lognorm" or "uniform" defining the prior distribution
+  prior_params: [1.0,2.6] # shape and scale param for log normal, or the edges of a uniform distribution
+  L: 50 # number of leaks to sample from prior
+  quantile: 1.0 # if 1.0, then true rate is estimated by the mean of posterior, otherwise, provide quantile as float e.g. 0.025 to use 0.025 quantile from posterior as true rate
   alpha0: 0.0 # default value for coefficients
   alpha1: 0.0
   alpha2: 0.0
@@ -60,4 +64,4 @@ follow_up:
   redundancy_filter: "recent" # recent/max/average
   sort_by_rate: True # True/False
   threshold: 0.0 # g/s
-  threshold_type: "absolute" # absolute/relative
+  threshold_type: "absolute" # absolute/proportion, but setting this to proportion errors out?

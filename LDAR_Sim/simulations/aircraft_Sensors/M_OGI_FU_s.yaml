@@ -7,12 +7,15 @@ is_follow_up: True
 sensor:
   type: OGI_camera_rk
   MDL: [0.01275, 2.78e-6]
-  QE: 0
+  QE: 0.0
 cost:
-  per_site: 700
+  per_site: 600
 coverage:
   spatial: 1
   temporal: 1
 t_bw_sites:
   vals: [30]
 time: 120
+follow_up:
+  interaction_priority: "proportion"
+  proportion: 0.5

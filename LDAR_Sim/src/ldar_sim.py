@@ -384,18 +384,29 @@ class LdarSim:
         timeseries = self.timeseries
         state = self.state
         for site in state["sites"]:
+            repair_limit = 1
             has_repairs = False
+            repair_limit_reached = False
+            # sort active leaks by measured rate from largest to smallest, push those without measured rate (None) to the end
+            site["active_leaks"] = sorted(site["active_leaks"], key=lambda x: (x['measured_rate'] is not None, x['measured_rate']), reverse=True)
             for lidx, lk in enumerate(site["active_leaks"]):
+                if repair_limit <= 0:
+                    repair_limit_reached = True
+                    break
                 repair = False
                 if lk["tagged"]:
                     # if company is natural then repair immediately
                     if lk["tagged_by_company"] == "natural":
                         repair = True
+                        repair_limit -= 1
                     elif (cur_date - lk["date_tagged"]).days >= (
                         site["repair_delay"]
                         + program_parameters["methods"][lk["tagged_by_company"]]["reporting_delay"]
                     ):
                         repair = True
+                        repair_limit -= 1
+                if repair_limit_reached:
+                    break
 
                 # Repair Leaks
                 if repair:

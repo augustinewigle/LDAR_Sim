@@ -16,6 +16,3 @@ coverage:
 t_bw_sites:
   vals: [30]
 time: 120
-follow_up:
-  interaction_priority: "proportion"
-  proportion: 0.5

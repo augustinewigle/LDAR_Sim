@@ -9,6 +9,10 @@ sensor:
   MDL: [0.0362]
   QE: 0
   bayes: True
+  prior: "lognorm"
+  prior_params: [1.0,2.6]
+  L: 50
+  quantile: 1.0
   alpha0: 0.143584345
   alpha1: 0.263838122
   alpha2: 0.766340941

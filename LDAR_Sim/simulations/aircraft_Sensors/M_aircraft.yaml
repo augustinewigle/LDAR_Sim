@@ -6,14 +6,17 @@ measurement_scale: equipment
 is_follow_up: False
 sensor:
   type: default
-  MDL: [1]
-  QE: 0
+  MDL: [1.0]
+  QE: 0.0
 cost:
   per_site: 200
 coverage:
   spatial: 1
   temporal: 1
 t_bw_sites:
-  vals: [5]
-RS: 4
-time: 1
+  vals: [10]
+RS: 6
+time: 5
+n_crews: 1
+max_workday: 8
+

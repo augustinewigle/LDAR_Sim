@@ -1,6 +1,6 @@
 parameter_level: method
 version: "3.3"
-label: aircraft_bayes
+label: aircraft_bayes_l
 deployment_type: mobile
 measurement_scale: equipment
 is_follow_up: False
@@ -12,7 +12,7 @@ sensor:
   prior: "lognorm"
   prior_params: [1.0,2.6]
   L: 50
-  quantile: 1.0
+  quantile: 0.025
   alpha0: 9.834239406
   alpha1: 1.101077569
   tau: 2.244338669
