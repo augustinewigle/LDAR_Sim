@@ -50,6 +50,8 @@ from numpy.random import binomial, choice
 from out_processing.plotter import make_plots
 from utils.attribution import update_tag
 
+from bisect import insort
+
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
@@ -383,30 +385,39 @@ class LdarSim:
         program_parameters = self.program_parameters
         timeseries = self.timeseries
         state = self.state
+        # limit the number of repairs per timestep
+        repair_limit = virtual_world['repair_limit']
+        # make data structure to track the top (repair_limit) largest leaks
+        top_leaks = []
+        for _ in range(repair_limit):
+            top_leaks.append({'leak_ID': 0, 'measured_rate': 0})
+        # go through all leaks, only keep the top (repair_limit) largest leaks by measured rate
+        for site in state['sites']:
+            for lidx, lk in enumerate(site['active_leaks']):
+                if lk['measured_rate'] is not None:
+                    # insert leak into sorted list, remove the smallest leak
+                    insort(top_leaks,{"leak_ID": lk['leak_ID'], "measured_rate": lk['measured_rate']},key=lambda x: -x['measured_rate'])
+                    top_leaks.pop()
+        # get leak ID's for those with largest measured rates
+        leak_ID_for_repair = {x['leak_ID'] for x in top_leaks if x['leak_ID'] != 0}
+        # go through leaks again within each site, only repair those identified above
+        # leave natural repairs as they are, only 
         for site in state["sites"]:
-            repair_limit = 1
+            # cant break early if no leak_ID_for_repair, because we still need to perform natural repairs
             has_repairs = False
-            repair_limit_reached = False
-            # sort active leaks by measured rate from largest to smallest, push those without measured rate (None) to the end
-            site["active_leaks"] = sorted(site["active_leaks"], key=lambda x: (x['measured_rate'] is not None, x['measured_rate']), reverse=True)
             for lidx, lk in enumerate(site["active_leaks"]):
-                if repair_limit <= 0:
-                    repair_limit_reached = True
-                    break
                 repair = False
                 if lk["tagged"]:
                     # if company is natural then repair immediately
                     if lk["tagged_by_company"] == "natural":
                         repair = True
-                        repair_limit -= 1
                     elif (cur_date - lk["date_tagged"]).days >= (
                         site["repair_delay"]
                         + program_parameters["methods"][lk["tagged_by_company"]]["reporting_delay"]
                     ):
-                        repair = True
-                        repair_limit -= 1
-                if repair_limit_reached:
-                    break
+                        if lk['leak_ID'] in leak_ID_for_repair: #only repair of leak is one of the top leaks identified above
+                            repair = True
+                            leak_ID_for_repair.remove(lk['leak_ID']) # remove from list of leaks to repair
 
                 # Repair Leaks
                 if repair:
