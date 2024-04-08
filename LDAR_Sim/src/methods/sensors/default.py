@@ -27,6 +27,76 @@ from scipy.stats import uniform
 from statsmodels.stats.weightstats import DescrStatsW
 import sys
 
+def get_bayes_measured_rate(technology, params, true_leak):
+    # get measured rate based on the bayesian model and true_leak
+    if technology == "QOGI_A":
+        error = np.random.normal(0, 1/(params['tau']+true_leak/params['eta']))
+        return (params['alpha0'] + params['alpha1'] * true_leak + params['alpha2'] * true_leak**2) * np.exp(error)
+    elif technology == "QOGI_B":
+        error = np.random.normal(0, 1/params['tau'])
+        if true_leak <= params['gamma']:
+            return (params['alpha0'] + params['alpha1'] * true_leak + params['alpha2'] * true_leak**2) * np.exp(error)
+        else:
+            return (params['alpha0'] + params['beta0'] + (params['alpha1'] + params['beta1']) * true_leak) * np.exp(error)
+    elif technology == 'QOGI_C':
+        error = np.random.normal(0, 1/(params['tau']+true_leak/params['eta']))
+        if true_leak <= params['gamma']:
+            return (params['alpha0'] + params['alpha1'] * true_leak + params['alpha2'] * true_leak**2) * np.exp(error)
+        else:
+            return (params['alpha0'] + params['beta0'] + (params['alpha1'] + params['beta1']) * true_leak) * np.exp(error)
+    elif technology == "Truck_TDLAS":
+        error = np.random.normal(0, 1/(params['tau']+true_leak/params['eta']))
+        return (params['alpha0'] + params['alpha1'] * true_leak) * np.exp(error)
+    elif technology == "Aerial_TDLAS":
+        error = np.random.normal(0, 1/(params['tau']+true_leak/params['eta']))
+        return (params['alpha1'] * true_leak) * np.exp(error)
+    elif technology == "Aerial_NIRHSI":
+        error = np.random.normal(0, 1/params['tau'])
+        return (params['alpha0'] + params['alpha1'] * true_leak) * np.exp(error)
+    else:
+        print("Error: Input valid detection technology")
+        sys.exit()
+
+def infer_true_rate(technology, leak_params, inference_params, measured_rate):
+     # sample L leaks from prior
+    if inference_params['prior_dist'] == 'lognorm': # sample from lognormal distribution with the inputted shape and scale param. loc assumed to be 0
+        Q_l = np.array(lognorm.rvs(s=inference_params['prior_params'][0],scale = inference_params['prior_params'][1],size=inference_params['prior_size'])) # dont need to sort, DescrStatsW takes care of it
+    elif inference_params['prior_dist'] == 'uniform': # sample from uniform distribution with end poitns a,b. Note the uniform dis defined by loc and scale params with end points [loc, loc + scale].
+        Q_l = np.array(uniform.rvs(loc = inference_params['prior_params'][0], scale = inference_params['prior_params'][1]-inference_params['prior_params'][0],size=inference_params['prior_size'])) 
+    else:
+        print("This prior distribution is not supported. Must be either lognorm or uniform.")       
+        sys.exit() 
+    # get posterior distribution based on measurement technology
+    if technology == 'QOGI_A':
+        means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
+    elif technology == 'QOGI_B':
+        means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
+        means[leak_params['gamma'] > Q_l] = np.log(leak_params['alpha0'] + leak_params['beta0'] + (leak_params['alpha1'] + leak_params['beta1']) * Q_l[leak_params['gamma'] > Q_l])
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau'])).pdf([np.log(measured_rate)])
+    elif technology == 'QOGI_C':
+        means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
+        means[leak_params['gamma'] > Q_l] = np.log(leak_params['alpha0'] + leak_params['beta0'] + (leak_params['alpha1'] + leak_params['beta1']) * Q_l[leak_params['gamma'] > Q_l])
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
+    elif technology == 'Truck_TDLAS':
+        means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l)
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
+    elif technology == 'Aerial_TDLAS':
+        means = np.log(leak_params['alpha1'] * Q_l)
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
+    elif technology == 'Aerial_NIRHSI':
+        means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l)
+        m_rate_probs = norm(loc=means, scale=1/(leak_params['tau'])).pdf([np.log(measured_rate)])
+    else:
+        print("Error: Input valid detection technology")
+        sys.exit()
+    weights = m_rate_probs / sum(m_rate_probs)
+    if inference_params['q'] >= 1.0:
+        m_rate = sum(np.multiply(weights,Q_l)) 
+    else: 
+        m_rate = DescrStatsW(Q_l, weights = weights).quantile(inference_params['q'],return_pandas=False)[0]
+    return m_rate
+
 def detect_emissions(
     self,
     site,
@@ -43,20 +113,22 @@ def detect_emissions(
     n_leaks = len(covered_leaks)
     missed_leaks_str = "{}_missed_leaks".format(self.config["label"])
 
-    if self.config["sensor"]["bayes"]:
+    if self.config["bayesian"]["bayes"]:
         # average of mcmc coefficients inputted as a method param under sensor
-        alpha0 = self.config['sensor']['alpha0']
-        alpha1 = self.config['sensor']['alpha1']
-        alpha2 = self.config['sensor']['alpha2']
-        beta0 = self.config['sensor']['beta0']
-        beta1 = self.config['sensor']['beta1']
-        gamma = self.config['sensor']['gamma']
-        tau = self.config['sensor']['tau']
-        eta = self.config['sensor']['eta']
-        prior_dist = self.config['sensor']['prior']
-        prior_params = self.config['sensor']['prior_params']
-        prior_size = self.config['sensor']['L']
-        q = self.config['sensor']['quantile']
+        measurement_tech = self.config['bayesian']['measurement_technology']
+        leak_params = {'alpha0': self.config['bayesian']['alpha0'], 
+                       'alpha1': self.config['bayesian']['alpha1'],
+                       'alpha2': self.config['bayesian']['alpha2'],
+                       'beta0': self.config['bayesian']['beta0'],
+                       'beta1': self.config['bayesian']['beta1'],
+                       'gamma': self.config['bayesian']['gamma'],
+                       'tau': self.config['bayesian']['tau'],
+                       'eta': self.config['bayesian']['eta']} 
+        infer_true = self.config['bayesian']['infer_true']
+        inference_params = {'prior_dist':self.config['bayesian']['prior'],
+                        'prior_params':self.config['bayesian']['prior_params'],
+                        'prior_size':self.config['bayesian']['L'],
+                        'q': self.config['bayesian']['quantile']}
         if self.config["measurement_scale"] == "site":
             if covered_site_rate > self.config["sensor"]["MDL"][0]:
                 found_leak = True
@@ -71,25 +143,10 @@ def detect_emissions(
                     found_leak = True
                     # sample epsilon from normal distribution
                     # compute measured rate according to the mcmc coefficients 
-                    error = np.random.normal(0, 1/tau)
-                    measured_rate = (alpha0 + alpha1*rate) * np.exp(error)
-                    # sample L leaks from prior
-                    if prior_dist == 'lognorm': # sample from lognormal distribution with the inputted shape and scale param. loc assumed to be 0
-                        Q_l = np.array(lognorm.rvs(s=prior_params[0],scale = prior_params[1],size=prior_size)) # dont need to sort, DescrStatsW takes care of it
-                    elif prior_dist == 'uniform': # sample from uniform distribution with end poitns a,b. Note the uniform dis defined by loc and scale params with end points [loc, loc + scale].
-                        Q_l = np.array(uniform.rvs(loc = prior_params[0], scale = prior_params[1]-prior_params[0],size=prior_size)) 
-                    else:
-                        print("This prior distribution is not supported. Must be either lognorm or uniform.")       
-                        sys.exit()     
-                    # since m_rate = C * e^eps follows log normal, log(m_rate) = ln(c) + eps follows normal with mean ln(c) + 0 and var = var(eps)
-                    means = np.log(alpha0 + alpha1*Q_l)
-                    m_rate_probs = norm(loc=means, scale=1/tau).pdf([np.log(measured_rate)])
-                    weights = m_rate_probs / sum(m_rate_probs)
-                    # if quantile specified, calculate it based on the empirical distribution, else just do mean
-                    if q >= 1.0:
-                        m_rate = sum(np.multiply(weights,Q_l)) 
-                    else: 
-                        m_rate = DescrStatsW(Q_l, weights = weights).quantile(q,return_pandas=False)[0]
+                    m_rate = get_bayes_measured_rate(measurement_tech, leak_params, rate)
+                    # if we want to infer true rate using bayesian model, do so by following the algorithm
+                    if infer_true:
+                        m_rate = infer_true_rate(measurement_tech, leak_params, inference_params, m_rate)
                 else:
                     m_rate = 0
                 equip_measured_rates.append(m_rate)
@@ -99,37 +156,12 @@ def detect_emissions(
                 self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
 
         elif self.config["measurement_scale"] == "component":
-            # If measurement scale is a leak, all leaks will be tagged
-            # ^ Not true anymore, there can still be measurement error with component scale i.e. OGI
-            # maybe take in technology type as one of the inputs, chnage likelihood/variance accordingly
             for leak in covered_leaks:
                 if leak['rate'] > self.config["sensor"]["MDL"][0]:
                     found_leak = True
-                    # sample L leaks from prior
-                    if prior_dist == 'lognorm': # sample from lognormal distribution with the inputted shape and scale param. loc assumed to be 0
-                        Q_l = np.array(lognorm.rvs(s=prior_params[0],scale = prior_params[1],size=prior_size)) # dont need to sort, DescrStatsW takes care of it
-                    elif prior_dist == 'uniform': # sample from uniform distribution with end poitns a,b. Note the uniform dis defined by loc and scale params with end points [loc, loc + scale].
-                        Q_l = np.array(uniform.rvs(loc = prior_params[0], scale = prior_params[1]-prior_params[0],size=prior_size)) 
-                    else:
-                        print("This prior distribution is not supported. Must be either lognorm or uniform.")       
-                        sys.exit()     
-                    # sample epsilon from normal distribution
-                    error = np.random.normal(0,1/(tau + leak['rate']/eta))
-                    # compute measured rate according to mcmc coefficients
-                    if leak['rate'] <= gamma:
-                        measured_rate = (alpha0 + alpha1 * leak['rate'] + alpha2 * leak['rate']**2) * np.exp(error)
-                        means = np.log(alpha0 + alpha1 * Q_l + alpha2 * np.square(Q_l))
-                    else:
-                        measured_rate = (alpha0 + beta0 + (alpha1 + beta1)*leak['rate']) * np.exp(error)
-                        means = np.log(alpha0 + beta0 + (alpha1 + beta1)*Q_l)
-                    m_rate_probs = norm(loc=means, scale=1/(tau+leak['rate']/eta)).pdf([np.log(measured_rate)])
-                    weights = m_rate_probs / sum(m_rate_probs) # div by 0 error sometimes, why?
-                    # if quantile specified, calculate it based on the empirical distribution, else just do mean
-                    if q >= 1.0:
-                        m_rate = sum(np.multiply(weights,Q_l)) 
-                    else: 
-                        m_rate = DescrStatsW(Q_l, weights = weights).quantile(q,return_pandas=False)[0]
-                    #print(m_rate,measured_rate) #m_rate and measured_rate are clearly different!!! But result is the same as non bayes?!?
+                    m_rate = get_bayes_measured_rate(measurement_tech, leak_params, leak['rate'])
+                    if infer_true:
+                        m_rate = infer_true_rate(measurement_tech, leak_params, inference_params, m_rate)
                     is_new_leak = update_tag(
                         leak,
                         m_rate,

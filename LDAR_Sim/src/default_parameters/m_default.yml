@@ -8,7 +8,10 @@ sensor:
   QE: 0.0
   MDL: [0.01]
   mod_loc: "_placeholder_str_"
-  bayes: False # True/False
+bayesian: # parameters if you want to use measured rate based on the bayesian model
+  bayes: False # True if you want to use measured rate based on the bayesian model
+  measurement_technology: '_placeholder_str_' # should be one of QOGI_A, QOGI_B, QOGI_C, Truck_TDLAS, Aerial_TDLAS, Aerial_NIRHSI
+  infer_true: True # True if you want to infer the true rate based on measured rate using bayesian model
   prior: "lognorm" # "lognorm" or "uniform" defining the prior distribution
   prior_params: [1.0,2.6] # shape and scale param for log normal, or the edges of a uniform distribution
   L: 50 # number of leaks to sample from prior
