@@ -66,7 +66,7 @@ def infer_true_rate(technology, leak_params, inference_params, measured_rate):
     else:
         print("This prior distribution is not supported. Must be either lognorm or uniform.")       
         sys.exit() 
-    # get posterior distribution based on measurement technology
+    # calculate probably of observing the measured rate given the true rate is Q_l
     if technology == 'QOGI_A':
         means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
         m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
@@ -90,10 +90,12 @@ def infer_true_rate(technology, leak_params, inference_params, measured_rate):
     else:
         print("Error: Input valid detection technology")
         sys.exit()
+    # now we have weighted sample of priors, with greater weights given to Q_l with greater probably of observing the measured rate
     weights = m_rate_probs / sum(m_rate_probs)
+    # by default, calculate the mean of the posterior
     if inference_params['q'] >= 1.0:
         m_rate = sum(np.multiply(weights,Q_l)) 
-    else: 
+    else: # use DescrStatsW to compute quantiles in the sample of priors and respective weights
         m_rate = DescrStatsW(Q_l, weights = weights).quantile(inference_params['q'],return_pandas=False)[0]
     return m_rate
 
