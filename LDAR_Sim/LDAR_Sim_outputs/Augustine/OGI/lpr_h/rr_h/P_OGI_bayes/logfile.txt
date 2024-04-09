@@ -1,0 +1,2 @@
+Simulating program: P_OGI_bayes ; simulation 3 of 3
+Finished simulating program P_OGI_bayes ; simulation 3 of 3 

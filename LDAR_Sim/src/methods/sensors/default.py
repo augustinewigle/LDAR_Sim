@@ -27,8 +27,9 @@ from scipy.stats import uniform
 from statsmodels.stats.weightstats import DescrStatsW
 import sys
 
-def get_bayes_measured_rate(technology, params, true_leak):
+def get_bayes_measured_rate(technology, params, true_leak): 
     # get measured rate based on the bayesian model and true_leak
+    # different model to sample a measured rate for different technology
     if technology == "QOGI_A":
         error = np.random.normal(0, 1/(params['tau']+true_leak/params['eta']))
         return (params['alpha0'] + params['alpha1'] * true_leak + params['alpha2'] * true_leak**2) * np.exp(error)
@@ -58,7 +59,8 @@ def get_bayes_measured_rate(technology, params, true_leak):
         sys.exit()
 
 def infer_true_rate(technology, leak_params, inference_params, measured_rate):
-     # sample L leaks from prior
+    # based on the measured rate and technology, infer the true rate by generating a posterior of true rate given measured rate
+    # sample L leaks from prior
     if inference_params['prior_dist'] == 'lognorm': # sample from lognormal distribution with the inputted shape and scale param. loc assumed to be 0
         Q_l = np.array(lognorm.rvs(s=inference_params['prior_params'][0],scale = inference_params['prior_params'][1],size=inference_params['prior_size'])) # dont need to sort, DescrStatsW takes care of it
     elif inference_params['prior_dist'] == 'uniform': # sample from uniform distribution with end poitns a,b. Note the uniform dis defined by loc and scale params with end points [loc, loc + scale].
@@ -72,10 +74,12 @@ def infer_true_rate(technology, leak_params, inference_params, measured_rate):
         m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
     elif technology == 'QOGI_B':
         means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
+        # adjustment for when prior leak >= gamma
         means[leak_params['gamma'] > Q_l] = np.log(leak_params['alpha0'] + leak_params['beta0'] + (leak_params['alpha1'] + leak_params['beta1']) * Q_l[leak_params['gamma'] > Q_l])
         m_rate_probs = norm(loc=means, scale=1/(leak_params['tau'])).pdf([np.log(measured_rate)])
     elif technology == 'QOGI_C':
         means = np.log(leak_params['alpha0'] + leak_params['alpha1'] * Q_l + leak_params['alpha2'] * np.square(Q_l))
+        # adjustment for when prior leak >= gamma
         means[leak_params['gamma'] > Q_l] = np.log(leak_params['alpha0'] + leak_params['beta0'] + (leak_params['alpha1'] + leak_params['beta1']) * Q_l[leak_params['gamma'] > Q_l])
         m_rate_probs = norm(loc=means, scale=1/(leak_params['tau']+Q_l/leak_params['eta'])).pdf([np.log(measured_rate)])
     elif technology == 'Truck_TDLAS':
@@ -127,10 +131,10 @@ def detect_emissions(
                        'tau': self.config['bayesian']['tau'],
                        'eta': self.config['bayesian']['eta']} 
         infer_true = self.config['bayesian']['infer_true']
-        inference_params = {'prior_dist':self.config['bayesian']['prior'],
-                        'prior_params':self.config['bayesian']['prior_params'],
-                        'prior_size':self.config['bayesian']['L'],
-                        'q': self.config['bayesian']['quantile']}
+        inference_params = {'prior_dist':self.config['bayesian']['prior'], # lognorm or uniform
+                        'prior_params':self.config['bayesian']['prior_params'], # two parameters defining either lognorm or uniform distribution
+                        'prior_size':self.config['bayesian']['L'], # size of prior sample to take
+                        'q': self.config['bayesian']['quantile']} # quantile of interest
         if self.config["measurement_scale"] == "site":
             if covered_site_rate > self.config["sensor"]["MDL"][0]:
                 found_leak = True
@@ -143,10 +147,9 @@ def detect_emissions(
                 # Probability of detection is independent of measurement error, use true rate to compare to MDL
                 if rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
-                    # sample epsilon from normal distribution
                     # compute measured rate according to the mcmc coefficients 
                     m_rate = get_bayes_measured_rate(measurement_tech, leak_params, rate)
-                    # if we want to infer true rate using bayesian model, do so by following the algorithm
+                    # if we want to infer true rate using bayesian model, do so with the following function
                     if infer_true:
                         m_rate = infer_true_rate(measurement_tech, leak_params, inference_params, m_rate)
                 else:
@@ -161,7 +164,9 @@ def detect_emissions(
             for leak in covered_leaks:
                 if leak['rate'] > self.config["sensor"]["MDL"][0]:
                     found_leak = True
+                    # compute measured rate according to the mcmc coefficients
                     m_rate = get_bayes_measured_rate(measurement_tech, leak_params, leak['rate'])
+                    # if we want to infer true rate using bayesian model, do so with the following function
                     if infer_true:
                         m_rate = infer_true_rate(measurement_tech, leak_params, inference_params, m_rate)
                     is_new_leak = update_tag(
@@ -189,7 +194,8 @@ def detect_emissions(
                 self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
         elif self.config["measurement_scale"] == "equipment":
             for rate in covered_equipment_rates:
-                '''m_rate = get_measured_rate(rate, self.config["sensor"]["QE"])
+                # we don't want to compare measured rate with MDL, instead compare true rate
+                '''m_rate = get_measured_rate(rate, self.config["sensor"]["QE"]) 
                 if m_rate > self.config["sensor"]["MDL"][0]:
                     found_leak = True
                 else:
