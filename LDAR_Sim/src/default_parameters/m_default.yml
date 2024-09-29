@@ -8,6 +8,12 @@ sensor:
   QE: 0.0
   MDL: [0.01]
   mod_loc: "_placeholder_str_"
+bayesian: # parameters if you want to use measured rate based on the bayesian model
+  infer_true: True # True if you want to infer the true rate based on measured rate using bayesian model
+  prior: "lognorm" # "lognorm" or "uniform" defining the prior distribution
+  prior_params: [1.0,2.6] # shape and scale param for log normal, or the edges of a uniform distribution
+  L: 50 # number of leaks to sample from prior
+  quantile: 1.0 # if 1.0, then true rate is estimated by the mean of posterior, otherwise, provide quantile as float e.g. 0.025 to use 0.025 quantile from posterior as true rate
 coverage:
   spatial: 1.0 # 0.0 to 1.0
   temporal: 1.0 # 0.0 to 1.0
@@ -51,4 +57,4 @@ follow_up:
   redundancy_filter: "recent" # recent/max/average
   sort_by_rate: True # True/False
   threshold: 0.0 # g/s
-  threshold_type: "absolute" # absolute/relative
+  threshold_type: "absolute" # absolute/proportion, but setting this to proportion errors out?

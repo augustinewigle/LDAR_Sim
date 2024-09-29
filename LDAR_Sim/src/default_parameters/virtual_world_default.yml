@@ -9,6 +9,7 @@ subtype_file: "_placeholder_str_"
 repair_delay:
   type: "default" # default/list/distribution
   val: [14.0]
+repair_limit: 20 # specify number of repairs that can take place per day over all sites
 emissions:
   consider_venting: False # True/False
   leak_dist_params: [-2.776, 1.462]

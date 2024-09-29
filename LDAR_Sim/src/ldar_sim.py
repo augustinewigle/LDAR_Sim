@@ -50,6 +50,8 @@ from numpy.random import binomial, choice
 from out_processing.plotter import make_plots
 from utils.attribution import update_tag
 
+from bisect import insort
+
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
@@ -373,6 +375,23 @@ class LdarSim:
 
         return
 
+    def get_top_leaks(self, repair_lim):
+        # search through list of leaks from all sites and keep 'repair_lim' largest leaks
+        top_leaks = []
+        state = self.state
+        # initialize data structure to store largest leaks
+        for _ in range(repair_lim):
+            top_leaks.append({'leak_ID': 0, 'measured_rate': 0})
+        # search through leaks in all sites
+        for site in state['sites']:
+            for lidx, lk in enumerate(site['active_leaks']):
+                # insert a measured leak into sorted list of leaks, remove smallest leak
+                if lk['measured_rate'] is not None:
+                    insort(top_leaks,{"leak_ID": lk['leak_ID'],"measured_rate":lk['measured_rate']},key=lambda x: -x['measured_rate'])
+                    top_leaks.pop()
+        # return set of leak ID's for the largest leaks
+        return {x['leak_ID'] for x in top_leaks if x['leak_ID'] != 0}
+    
     def repair_leaks(self):
         """
         Repair tagged leaks and remove from tag pool.
@@ -383,7 +402,13 @@ class LdarSim:
         program_parameters = self.program_parameters
         timeseries = self.timeseries
         state = self.state
+        # limit the number of repairs per timestep
+        repair_limit = virtual_world['repair_limit']
+        # only repair leaks if its leak_ID is in leak_ID_for_repair
+        leak_ID_for_repair = self.get_top_leaks(repair_limit)
+
         for site in state["sites"]:
+            # cant break early if no leak_ID_for_repair, because we still need to perform natural repairs
             has_repairs = False
             for lidx, lk in enumerate(site["active_leaks"]):
                 repair = False
@@ -395,7 +420,9 @@ class LdarSim:
                         site["repair_delay"]
                         + program_parameters["methods"][lk["tagged_by_company"]]["reporting_delay"]
                     ):
-                        repair = True
+                        if lk['leak_ID'] in leak_ID_for_repair: #only repair of leak is one of the top leaks identified above
+                            repair = True
+                            leak_ID_for_repair.remove(lk['leak_ID']) # remove from list of leaks to repair
 
                 # Repair Leaks
                 if repair:

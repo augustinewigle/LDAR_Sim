@@ -18,8 +18,14 @@
 #
 # ------------------------------------------------------------------------------
 from methods.funcs import measured_rate as get_measured_rate
+#from methods.funcs import measured_rate_bayes as get_bayes_rate
 from utils.attribution import update_tag
-
+import numpy as np
+from scipy.stats import lognorm
+from scipy.stats import norm
+from scipy.stats import uniform
+from statsmodels.stats.weightstats import DescrStatsW
+import sys
 
 def detect_emissions(
     self,
@@ -36,48 +42,55 @@ def detect_emissions(
     found_leak = False
     n_leaks = len(covered_leaks)
     missed_leaks_str = "{}_missed_leaks".format(self.config["label"])
-
+    
     if self.config["measurement_scale"] == "site":
         if covered_site_rate > self.config["sensor"]["MDL"][0]:
-            found_leak = True
-            site_measured_rate = get_measured_rate(covered_site_rate, self.config["sensor"]["QE"])
-        else:
-            site[missed_leaks_str] += n_leaks
-            self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
-    elif self.config["measurement_scale"] == "equipment":
-        for rate in covered_equipment_rates:
-            m_rate = get_measured_rate(rate, self.config["sensor"]["QE"])
-            if m_rate > self.config["sensor"]["MDL"][0]:
                 found_leak = True
-            else:
-                m_rate = 0
-            equip_measured_rates.append(m_rate)
-            site_measured_rate += m_rate
-        if not found_leak:
-            site[missed_leaks_str] += n_leaks
-            self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
+                site_measured_rate = get_measured_rate(covered_site_rate, self.config["sensor"]["QE"])
+        else:
+                site[missed_leaks_str] += n_leaks
+                self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
+    elif self.config["measurement_scale"] == "equipment":
+            for rate in covered_equipment_rates:
+                # we don't want to compare measured rate with MDL, instead compare true rate
+                '''m_rate = get_measured_rate(rate, self.config["sensor"]["QE"]) 
+                if m_rate > self.config["sensor"]["MDL"][0]:
+                    found_leak = True
+                else:
+                    m_rate = 0'''
+                if rate > self.config['sensor']['MDL'][0]:
+                    found_leak = True
+                    m_rate = get_measured_rate(rate, self.config['sensor']['QE'])
+                else:
+                    m_rate = 0
+                equip_measured_rates.append(m_rate)
+                site_measured_rate += m_rate
+            if not found_leak:
+                site[missed_leaks_str] += n_leaks
+                self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += n_leaks
 
     elif self.config["measurement_scale"] == "component":
-        # If measurement scale is a leak, all leaks will be tagged
-        for leak in covered_leaks:
-            if leak["rate"] > self.config["sensor"]["MDL"][0]:
-                found_leak = True
-                measured_rate = get_measured_rate(leak["rate"], self.config["sensor"]["QE"])
-                is_new_leak = update_tag(
-                    leak,
-                    measured_rate,
-                    site,
-                    self.timeseries,
-                    self.state["t"],
-                    self.config["label"],
-                    self.id,
-                    self.program_parameters,
-                )
-                # Add these leaks to the 'tag pool'
-                if is_new_leak:
-                    site_measured_rate += measured_rate
-            else:
-                site[missed_leaks_str] += 1
+            # If measurement scale is a leak, all leaks will be tagged
+            for leak in covered_leaks:
+                if leak['rate'] > self.config['sensor']['MDL'][0]:
+                    measured_rate = get_measured_rate(leak['rate'],self.config['sensor']['QE'])
+                    found_leak = True
+                    is_new_leak = update_tag(
+                        leak,
+                        measured_rate,
+                        site,
+                        self.timeseries,
+                        self.state["t"],
+                        self.config["label"],
+                        self.id,
+                        self.program_parameters,
+                    )
+                    # Add these leaks to the 'tag pool'
+                    if is_new_leak:
+                        site_measured_rate += measured_rate
+                else:
+                    site[missed_leaks_str] += 1
+                    self.timeseries[missed_leaks_str][self.state["t"].current_timestep] += 1
 
     # Put all necessary information in a dictionary to be assessed at end of day
     site_dict = {

@@ -1,0 +1,633 @@
+baseline_program: P_none
+end_date:
+- 2024
+- 1
+- 1
+input_directory: ./inputs
+n_processes: 6
+n_simulations: 3
+output_directory: ./././LDAR_Sim_outputs/Augustine/OGI/lpr_h/rr_h
+outputs:
+  batch_reporting: true
+  leaks: true
+  plots: true
+  site_visits: false
+  sites: true
+  timeseries: true
+parameter_level: simulation_settings
+pregenerate_leaks: true
+preseed_random: true
+print_from_simulations: true
+programs:
+  P_OGI:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels:
+    - OGI
+    methods:
+      OGI:
+        RS: 3
+        bayesian:
+          L: 50
+          alpha0: 0.0
+          alpha1: 0.0
+          alpha2: 0.0
+          bayes: false
+          beta0: 0.0
+          beta1: 0.0
+          eta: 1.0
+          gamma: 0.0
+          infer_true: true
+          measurement_technology: null
+          prior: lognorm
+          prior_params:
+          - 1.0
+          - 2.6
+          quantile: 1.0
+          tau: 1.0
+        consider_daylight: false
+        cost:
+          per_day: 0
+          per_hour: 0
+          per_site: 600
+          upfront: 0
+        coverage:
+          spatial: 1
+          temporal: 1
+        deployment_type: mobile
+        follow_up:
+          delay: 0
+          instant_threshold: null
+          instant_threshold_type: absolute
+          interaction_priority: threshold
+          min_followup_days_to_end: 0
+          min_followup_type: annual
+          min_followups: []
+          preferred_method: null
+          proportion: 1.0
+          redundancy_filter: recent
+          sort_by_rate: true
+          threshold: 0.0
+          threshold_type: absolute
+        is_follow_up: false
+        label: OGI
+        max_workday: 8
+        measurement_scale: component
+        n_crews: null
+        parameter_level: method
+        reporting_delay: 2
+        scheduling:
+          LDAR_crew_init_location:
+          - -114.062
+          - 51.044
+          deployment_months:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          deployment_years: []
+          home_bases_files: Airport_AB_Coordinates.csv
+          min_time_bt_surveys: null
+          route_planning: false
+          travel_speeds: []
+        sensor:
+          MDL:
+          - 0.0362
+          QE: 0.0
+          mod_loc: null
+          type: default
+        t_bw_sites:
+          file: null
+          vals:
+          - 30
+        time: 120
+        version: '3.3'
+        weather_envs:
+          precip:
+          - 0.0
+          - 0.5
+          temp:
+          - -40.0
+          - 40.0
+          wind:
+          - 0.0
+          - 10.0
+    parameter_level: program
+    program_name: P_OGI
+    version: '3.3'
+  P_OGI_QE:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels:
+    - OGI_QE
+    methods:
+      OGI_QE:
+        RS: 3
+        bayesian:
+          L: 50
+          alpha0: 0.0
+          alpha1: 0.0
+          alpha2: 0.0
+          bayes: false
+          beta0: 0.0
+          beta1: 0.0
+          eta: 1.0
+          gamma: 0.0
+          infer_true: true
+          measurement_technology: null
+          prior: lognorm
+          prior_params:
+          - 1.0
+          - 2.6
+          quantile: 1.0
+          tau: 1.0
+        consider_daylight: false
+        cost:
+          per_day: 0
+          per_hour: 0
+          per_site: 600
+          upfront: 0
+        coverage:
+          spatial: 1
+          temporal: 1
+        deployment_type: mobile
+        follow_up:
+          delay: 0
+          instant_threshold: null
+          instant_threshold_type: absolute
+          interaction_priority: threshold
+          min_followup_days_to_end: 0
+          min_followup_type: annual
+          min_followups: []
+          preferred_method: null
+          proportion: 1.0
+          redundancy_filter: recent
+          sort_by_rate: true
+          threshold: 0.0
+          threshold_type: absolute
+        is_follow_up: false
+        label: OGI_QE
+        max_workday: 8
+        measurement_scale: component
+        n_crews: null
+        parameter_level: method
+        reporting_delay: 2
+        scheduling:
+          LDAR_crew_init_location:
+          - -114.062
+          - 51.044
+          deployment_months:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          deployment_years: []
+          home_bases_files: Airport_AB_Coordinates.csv
+          min_time_bt_surveys: null
+          route_planning: false
+          travel_speeds: []
+        sensor:
+          MDL:
+          - 0.0362
+          QE: 7.5
+          mod_loc: null
+          type: default
+        t_bw_sites:
+          file: null
+          vals:
+          - 30
+        time: 120
+        version: '3.3'
+        weather_envs:
+          precip:
+          - 0.0
+          - 0.5
+          temp:
+          - -40.0
+          - 40.0
+          wind:
+          - 0.0
+          - 10.0
+    parameter_level: program
+    program_name: P_OGI_QE
+    version: '3.3'
+  P_OGI_bayes:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels:
+    - OGI_bayes
+    methods:
+      OGI_bayes:
+        RS: 3
+        bayesian:
+          L: 50
+          alpha0: 0.143584345
+          alpha1: 0.263838122
+          alpha2: 0.766340941
+          bayes: true
+          beta0: 2.040240898
+          beta1: 0.230495577
+          eta: 9.435283625
+          gamma: 1.885690641
+          infer_true: true
+          measurement_technology: QOGI_C
+          prior: lognorm
+          prior_params:
+          - 1.0
+          - 2.6
+          quantile: 1.0
+          tau: 0.960453415
+        consider_daylight: false
+        cost:
+          per_day: 0
+          per_hour: 0
+          per_site: 600
+          upfront: 0
+        coverage:
+          spatial: 1
+          temporal: 1
+        deployment_type: mobile
+        follow_up:
+          delay: 0
+          instant_threshold: null
+          instant_threshold_type: absolute
+          interaction_priority: threshold
+          min_followup_days_to_end: 0
+          min_followup_type: annual
+          min_followups: []
+          preferred_method: null
+          proportion: 1.0
+          redundancy_filter: recent
+          sort_by_rate: true
+          threshold: 0.0
+          threshold_type: absolute
+        is_follow_up: false
+        label: OGI_bayes
+        max_workday: 8
+        measurement_scale: component
+        n_crews: null
+        parameter_level: method
+        reporting_delay: 2
+        scheduling:
+          LDAR_crew_init_location:
+          - -114.062
+          - 51.044
+          deployment_months:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          deployment_years: []
+          home_bases_files: Airport_AB_Coordinates.csv
+          min_time_bt_surveys: null
+          route_planning: false
+          travel_speeds: []
+        sensor:
+          MDL:
+          - 0.0362
+          QE: 0.0
+          mod_loc: null
+          type: default
+        t_bw_sites:
+          file: null
+          vals:
+          - 30
+        time: 120
+        version: '3.3'
+        weather_envs:
+          precip:
+          - 0.0
+          - 0.5
+          temp:
+          - -40.0
+          - 40.0
+          wind:
+          - 0.0
+          - 10.0
+    parameter_level: program
+    program_name: P_OGI_bayes
+    version: '3.3'
+  P_OGI_bayes_l:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels:
+    - OGI_bayes_l
+    methods:
+      OGI_bayes_l:
+        RS: 3
+        bayesian:
+          L: 50
+          alpha0: 0.143584345
+          alpha1: 0.263838122
+          alpha2: 0.766340941
+          bayes: true
+          beta0: 2.040240898
+          beta1: 0.230495577
+          eta: 9.435283625
+          gamma: 1.885690641
+          infer_true: true
+          measurement_technology: QOGI_C
+          prior: lognorm
+          prior_params:
+          - 1.0
+          - 2.6
+          quantile: 0.025
+          tau: 0.960453415
+        consider_daylight: false
+        cost:
+          per_day: 0
+          per_hour: 0
+          per_site: 600
+          upfront: 0
+        coverage:
+          spatial: 1
+          temporal: 1
+        deployment_type: mobile
+        follow_up:
+          delay: 0
+          instant_threshold: null
+          instant_threshold_type: absolute
+          interaction_priority: threshold
+          min_followup_days_to_end: 0
+          min_followup_type: annual
+          min_followups: []
+          preferred_method: null
+          proportion: 1.0
+          redundancy_filter: recent
+          sort_by_rate: true
+          threshold: 0.0
+          threshold_type: absolute
+        is_follow_up: false
+        label: OGI_bayes_l
+        max_workday: 8
+        measurement_scale: component
+        n_crews: null
+        parameter_level: method
+        reporting_delay: 2
+        scheduling:
+          LDAR_crew_init_location:
+          - -114.062
+          - 51.044
+          deployment_months:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          deployment_years: []
+          home_bases_files: Airport_AB_Coordinates.csv
+          min_time_bt_surveys: null
+          route_planning: false
+          travel_speeds: []
+        sensor:
+          MDL:
+          - 0.0362
+          QE: 0.0
+          mod_loc: null
+          type: default
+        t_bw_sites:
+          file: null
+          vals:
+          - 30
+        time: 120
+        version: '3.3'
+        weather_envs:
+          precip:
+          - 0.0
+          - 0.5
+          temp:
+          - -40.0
+          - 40.0
+          wind:
+          - 0.0
+          - 10.0
+    parameter_level: program
+    program_name: P_OGI_bayes_l
+    version: '3.3'
+  P_OGI_bayes_u:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels:
+    - OGI_bayes_u
+    methods:
+      OGI_bayes_u:
+        RS: 3
+        bayesian:
+          L: 50
+          alpha0: 0.143584345
+          alpha1: 0.263838122
+          alpha2: 0.766340941
+          bayes: true
+          beta0: 2.040240898
+          beta1: 0.230495577
+          eta: 9.435283625
+          gamma: 1.885690641
+          infer_true: true
+          measurement_technology: QOGI_C
+          prior: lognorm
+          prior_params:
+          - 1.0
+          - 2.6
+          quantile: 0.975
+          tau: 0.960453415
+        consider_daylight: false
+        cost:
+          per_day: 0
+          per_hour: 0
+          per_site: 600
+          upfront: 0
+        coverage:
+          spatial: 1
+          temporal: 1
+        deployment_type: mobile
+        follow_up:
+          delay: 0
+          instant_threshold: null
+          instant_threshold_type: absolute
+          interaction_priority: threshold
+          min_followup_days_to_end: 0
+          min_followup_type: annual
+          min_followups: []
+          preferred_method: null
+          proportion: 1.0
+          redundancy_filter: recent
+          sort_by_rate: true
+          threshold: 0.0
+          threshold_type: absolute
+        is_follow_up: false
+        label: OGI_bayes_u
+        max_workday: 8
+        measurement_scale: component
+        n_crews: null
+        parameter_level: method
+        reporting_delay: 2
+        scheduling:
+          LDAR_crew_init_location:
+          - -114.062
+          - 51.044
+          deployment_months:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          deployment_years: []
+          home_bases_files: Airport_AB_Coordinates.csv
+          min_time_bt_surveys: null
+          route_planning: false
+          travel_speeds: []
+        sensor:
+          MDL:
+          - 0.0362
+          QE: 0.0
+          mod_loc: null
+          type: default
+        t_bw_sites:
+          file: null
+          vals:
+          - 30
+        time: 120
+        version: '3.3'
+        weather_envs:
+          precip:
+          - 0.0
+          - 0.5
+          temp:
+          - -40.0
+          - 40.0
+          wind:
+          - 0.0
+          - 10.0
+    parameter_level: program
+    program_name: P_OGI_bayes_u
+    version: '3.3'
+  P_none:
+    economics:
+      GWP_CH4: 28.0
+      carbon_price_tonnesCO2e: 40.0
+      cost_CCUS: 20.0
+      repair_costs:
+        file: null
+        vals:
+        - 200
+      sale_price_natgas: 3.0
+      verification_cost: 0
+    method_labels: []
+    methods: {}
+    parameter_level: program
+    program_name: P_none
+    version: '3.3'
+reference_program: P_OGI
+start_date:
+- 2023
+- 1
+- 1
+version: '3.3'
+virtual_world:
+  NRd: 365
+  consider_weather: false
+  emissions:
+    LPR: 0.1
+    consider_venting: false
+    leak_dist_params:
+    - -2.776
+    - 1.462
+    leak_dist_type: lognorm
+    leak_file: null
+    leak_file_use: sample
+    max_leak_rate: 100000.0
+    units:
+    - kilogram
+    - hour
+  infrastructure_file: facilities_alberta.csv
+  n_init_days: null
+  n_init_leaks_prob: null
+  parameter_level: virtual_world
+  repair_delay:
+    type: default
+    val:
+    - 14.0
+  repair_limit: 50
+  site_samples: 500
+  subtype_file: null
+  version: '3.3'
+  weather_file: weather_alberta.nc
+  weather_is_hourly: true

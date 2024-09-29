@@ -1,0 +1,24 @@
+,Program,Mean Cost,St. Dev.,Method
+0,P_none,0,0.0,repair
+1,P_none,7282,15.758172482873796,nat_repair
+2,P_none,0,0.0,verification
+3,P_OGI,2035,19.27623753052797,repair
+4,P_OGI,6505,33.21284891925586,nat_repair
+5,P_OGI,0,0.0,verification
+6,P_OGI,1800,0.0,OGI
+7,P_OGI_bayes,2021,10.433280085061302,repair
+8,P_OGI_bayes,6515,31.620246678355187,nat_repair
+9,P_OGI_bayes,0,0.0,verification
+10,P_OGI_bayes,1800,0.0,OGI_bayes
+11,P_OGI_bayes_l,2029,32.34068644911542,repair
+12,P_OGI_bayes_l,6507,42.85043757069482,nat_repair
+13,P_OGI_bayes_l,0,0.0,verification
+14,P_OGI_bayes_l,1800,0.0,OGI_bayes_l
+15,P_OGI_bayes_u,2037,15.043049336265996,repair
+16,P_OGI_bayes_u,6519,23.60451934128986,nat_repair
+17,P_OGI_bayes_u,0,0.0,verification
+18,P_OGI_bayes_u,1800,0.0,OGI_bayes_u
+19,P_OGI_QE,2025,20.191087142598334,repair
+20,P_OGI_QE,6509,25.00026666524446,nat_repair
+21,P_OGI_QE,0,0.0,verification
+22,P_OGI_QE,1800,0.0,OGI_QE

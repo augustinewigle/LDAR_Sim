@@ -1,0 +1,5 @@
+version: "3.3"
+parameter_level: "virtual_world"
+emissions:
+  LPR: 0.0065
+repair_limit: 10
